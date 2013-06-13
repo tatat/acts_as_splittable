@@ -3,6 +3,27 @@ ActsAsSplittable
 
 Create virtual attributes.
 
+Installation
+--------------------
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'acts_as_splittable'
+```
+
+And then execute:
+
+```
+$ bundle
+```
+
+Or install it yourself as:
+
+```
+$ gem install acts_as_splittable
+```
+
 
 Usage
 --------------------
@@ -114,8 +135,8 @@ p splittable.email_domain #=> nil
 
 splittable.split_column_values!
 
-p splittable.email_local  #=> 'splittable'
-p splittable.email_domain #=> 'example.com'
+p splittable.email_local  #=> "splittable"
+p splittable.email_domain #=> "example.com"
 ```
 
 Contributing
