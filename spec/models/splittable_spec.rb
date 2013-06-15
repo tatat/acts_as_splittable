@@ -59,5 +59,32 @@ require 'spec_helper'
       end
     end
 
+    context 'when nil includes in partials or value of column is nil' do
+      before :each do
+        @splittable1 = klass.new(name: "#{klass.name} 1")
+        @splittable1.save!
+
+        @splittable2 = klass.create!(
+          name: "#{klass.name} 2"
+        )
+
+        @splittables = [@splittable1, @splittable2]
+      end
+
+      it 'should not join partials before save' do
+        @splittables.each do |record|
+          record.email.should be_nil
+        end
+      end
+
+      it 'should not split columns after initialize' do
+        @splittables.each do |record|
+          splittable = Splittable.find(record.id)
+
+          splittable.email_local.should be_nil
+          splittable.email_domain.should be_nil
+        end
+      end
+    end
   end
 end

@@ -54,19 +54,21 @@ module ActsAsSplittable
         split, pattern, partials, on_split, on_join = self.class.splittable_columns[column]
         value                                       = send(column)
 
-        values = if on_split
-          on_split.is_a?(Symbol) ? send(on_split, value) : on_split.(value)
-        elsif value
-          if split
-            value.to_s.split *(split.is_a?(Array) ? split : [split])
-          else
-            matches = value.to_s.match(pattern)
-            matches[1..(matches.length - 1)]
-          end
-        end || []
+        unless value.nil?
+          values = if on_split
+            on_split.is_a?(Symbol) ? send(on_split, value) : on_split.(value)
+          elsif value
+            if split
+              value.to_s.split *(split.is_a?(Array) ? split : [split])
+            else
+              matches = value.to_s.match(pattern)
+              matches[1..(matches.length - 1)]
+            end
+          end || []
 
-        partials.each_with_index do |partial, index|
-          send :"#{partial}=", values[index]
+          partials.each_with_index do |partial, index|
+            send :"#{partial}=", values[index]
+          end
         end
       end
 
@@ -80,7 +82,9 @@ module ActsAsSplittable
         split, pattern, partials, on_split, on_join = self.class.splittable_columns[column.to_sym]
         partials                                    = partials.map{|partial| send(partial) }
 
-        send :"#{column}=", on_join.is_a?(Symbol) ? send(on_join, partials) : on_join.(partials)
+        unless partials.any?(&:nil?)
+          send :"#{column}=", on_join.is_a?(Symbol) ? send(on_join, partials) : on_join.(partials)
+        end
       end
         
       self
