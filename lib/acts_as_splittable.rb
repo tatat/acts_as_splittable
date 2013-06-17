@@ -56,7 +56,7 @@ module ActsAsSplittable
 
         unless value.nil?
           values = if on_split
-            on_split.is_a?(Symbol) ? send(on_split, value) : on_split.(value)
+            run_callback(on_split, value)
           elsif value
             if split
               value.to_s.split *(split.is_a?(Array) ? split : [split])
@@ -83,15 +83,25 @@ module ActsAsSplittable
         partials                                    = partials.map{|partial| send(partial) }
 
         unless partials.any?(&:nil?)
-          send :"#{column}=", on_join.is_a?(Symbol) ? send(on_join, partials) : on_join.(partials)
+          send :"#{column}=", run_callback(on_join, partials)
         end
       end
-        
+
       self
     end
 
     def splittable_partials
       @splittable_partials ||= {}
+    end
+
+    private
+
+    def run_callback(callback, *args)
+      if callback.is_a?(Proc)
+        instance_exec(*args, &callback)
+      else
+        send(callback, *args)
+      end
     end
   end
 end
