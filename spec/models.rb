@@ -3,7 +3,7 @@ EMAIL_JOIN_PROCESS  = Proc.new{|values| values.join('@') }
 
 class Splittable < ActiveRecord::Base
 
-  acts_as_splittable
+  acts_as_splittable predicates: true
 
   splittable :email,        split: ['@', 2], partials: [:email_local, :email_domain], on_join: EMAIL_JOIN_PROCESS
   splittable :postal_code,  pattern: /\A(?<postal_code1>[0-9]{3})(?<postal_code2>[0-9]{4})\Z/
@@ -43,4 +43,16 @@ class SplittableWithValidationForOriginalColumn < ActiveRecord::Base
   splittable :email, pattern: EMAIL_SPLIT_PATTERN, on_join: EMAIL_JOIN_PROCESS
 
   validates :email, format: { with: /\A[a-zA-Z0-9_.-]+@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,4}\Z/ }
+end
+
+class SplittableJoinOnChange < ActiveRecord::Base
+  self.table_name = 'splittables'
+
+  acts_as_splittable join_on_change: true, callbacks: false
+
+  splittable :email, pattern: EMAIL_SPLIT_PATTERN, on_join: EMAIL_JOIN_PROCESS
+
+  splittable :phone_number,
+    pattern: /\A(?<phone_number1>\d{3})-(?<phone_number2>\d{4})-(?<phone_number3>\d{4})\Z/,
+    on_join: ->(values) { values.join '-' }
 end

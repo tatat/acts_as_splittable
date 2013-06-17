@@ -47,7 +47,7 @@ require 'spec_helper'
 
     it 'should split columns after initialize' do
       @splittables.each do |record|
-        splittable = Splittable.find(record.id)
+        splittable = klass.find(record.id)
 
         splittable.email_local.should   == 'splittable'
         splittable.email_domain.should  == 'example.com'
@@ -56,6 +56,39 @@ require 'spec_helper'
         splittable.phone_number1.should == '012'
         splittable.phone_number2.should == '3456'
         splittable.phone_number3.should == '7890'
+      end
+    end
+
+    describe '#*_changed?' do
+      before do
+        @splittable = klass.new
+      end
+
+      it 'should return true when value is changed until #split_column_values! or #join_column_values! is called' do
+        @splittable.email_local_changed?.should_not  be_true
+        @splittable.email_domain_changed?.should_not be_true
+
+        @splittable.email_local = 'splittable'
+        @splittable.email_local_changed?.should be_true
+
+        @splittable.email_domain = 'example.com'
+        @splittable.email_domain_changed?.should be_true
+
+        @splittable.join_column_values!
+
+        @splittable.email_local_changed?.should_not  be_true
+        @splittable.email_domain_changed?.should_not be_true
+
+        @splittable.email_local = nil
+        @splittable.email_local_changed?.should be_true
+
+        @splittable.email_domain = nil
+        @splittable.email_domain_changed?.should be_true
+
+        @splittable.split_column_values!
+
+        @splittable.email_local_changed?.should_not  be_true
+        @splittable.email_domain_changed?.should_not be_true
       end
     end
 
@@ -131,5 +164,32 @@ describe Splittable do
       model.birthday_month.should == 7
       model.birthday_day.should   == 7
     end
+  end
+end
+
+describe SplittableJoinOnChange do
+  it 'should join partials when one of partials is set and all of them are not nil' do
+    splittable = SplittableJoinOnChange.new
+
+    splittable.email_local  = 'splittable'
+    splittable.email_domain = 'example.com'
+
+    splittable.email.should == 'splittable@example.com'
+
+    splittable.email = nil
+
+    splittable.phone_number1       = '012'
+    splittable.phone_number.should be_nil
+
+    splittable.phone_number2       = '3456'
+    splittable.phone_number.should be_nil
+
+    splittable.phone_number3       = '7890'
+    splittable.phone_number.should == '012-3456-7890'
+
+    splittable.phone_number3       = '0000'
+    splittable.phone_number.should == '012-3456-0000'
+
+    splittable.email.should be_nil
   end
 end
