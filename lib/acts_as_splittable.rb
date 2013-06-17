@@ -77,7 +77,7 @@ module ActsAsSplittable
 
         unless value.nil?
           values = if on_split
-            run_callback(on_split, value)
+            splittable_run_callback(on_split, value)
           elsif value
             if split
               value.to_s.split *(split.is_a?(Array) ? split : [split])
@@ -106,7 +106,7 @@ module ActsAsSplittable
         values                                      = partials.map{|partial| send(partial) }
 
         unless values.any?(&:nil?)
-          send :"#{column}=", run_callback(on_join, values)
+          send :"#{column}=", splittable_run_callback(on_join, values)
           reset_splittable_changed_partials partials
         end
       end
@@ -137,7 +137,7 @@ module ActsAsSplittable
 
     private
 
-    def run_callback(callback, *args)
+    def splittable_run_callback(callback, *args)
       if callback.is_a?(Proc)
         instance_exec(*args, &callback)
       else
