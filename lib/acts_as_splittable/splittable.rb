@@ -16,8 +16,7 @@ module ActsAsSplittable
           elsif value
             if split
               value.to_s.split *(split.is_a?(Array) ? split : [split])
-            else
-              matches = value.to_s.match(pattern)
+            elsif matches = value.to_s.match(pattern)
               matches[1..(matches.length - 1)]
             end
           end || []

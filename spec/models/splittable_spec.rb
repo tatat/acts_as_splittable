@@ -167,9 +167,10 @@ describe Splittable do
   end
 end
 
-describe SplittableJoinOnChange do
+describe SplittableSplitOrJoinOnChange do
+
   it 'should join partials when one of partials is set and all of them are not nil' do
-    splittable = SplittableJoinOnChange.new
+    splittable = SplittableSplitOrJoinOnChange.new
 
     splittable.email_local  = 'splittable'
     splittable.email_domain = 'example.com'
@@ -192,4 +193,53 @@ describe SplittableJoinOnChange do
 
     splittable.email.should be_nil
   end
+
+  it 'should split value when value is set' do
+    splittable1 = SplittableSplitOrJoinOnChange.new(
+      email:        'splittable@example.com',
+      phone_number: '012-3456-7890',
+    )
+
+    splittable2              = SplittableSplitOrJoinOnChange.new
+    splittable2.email        = 'splittable@example.com'
+    splittable2.phone_number = '012-3456-7890'
+
+    [splittable1, splittable2].each do |splittable|
+      splittable.email_local.should   == 'splittable'
+      splittable.email_domain.should  == 'example.com'
+      splittable.phone_number1.should == '012'
+      splittable.phone_number2.should == '3456'
+      splittable.phone_number3.should == '7890'
+    end
+
+    splittable1.phone_number = '000-0000-0000'
+
+    splittable1.phone_number1.should == '000'
+    splittable1.phone_number2.should == '0000'
+    splittable1.phone_number3.should == '0000'
+  end
+
+end
+
+describe SplittableSplitOrJoinOnChangeWithAliasAttribute do
+
+  it 'should split value when value is set' do
+    splittable1 = SplittableSplitOrJoinOnChangeWithAliasAttribute.new(
+      email_address:        'splittable@example.com',
+    )
+
+    splittable2               = SplittableSplitOrJoinOnChangeWithAliasAttribute.new
+    splittable2.email_address = 'splittable@example.com'
+
+    [splittable1, splittable2].each do |splittable|
+      splittable.email_local.should   == 'splittable'
+      splittable.email_domain.should  == 'example.com'
+    end
+
+    splittable1.email_address = 'splittable1@1.example.com'
+
+    splittable1.email_local.should   == 'splittable1'
+    splittable1.email_domain.should  == '1.example.com'
+  end
+
 end
