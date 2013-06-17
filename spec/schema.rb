@@ -5,6 +5,8 @@ ActiveRecord::Schema.define version: 0 do
     t.string   "email"
     t.string   "postal_code"
     t.string   "phone_number"
+    t.string   "birthday_era"
+    t.string   "birthday"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

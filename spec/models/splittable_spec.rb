@@ -2,7 +2,7 @@ require 'spec_helper'
 
 [Splittable, SplittableInherited, SplittableInheritedInherited].each do |klass|
   describe klass do
-    
+
     before :each do
       @splittable1               = klass.new(name: "#{klass.name} 1")
       @splittable1.email_local   = 'splittable'
@@ -85,6 +85,51 @@ require 'spec_helper'
           splittable.email_domain.should be_nil
         end
       end
+    end
+  end
+end
+
+describe Splittable do
+  context 'when was given a proc to callbacks' do
+    it 'should call in the record' do
+      model_class = Class.new(ActiveRecord::Base) do
+        self.table_name = :splittables
+
+        acts_as_splittable
+
+        splittable :birthday, {
+          partials: [:birthday_year, :birthday_month, :birthday_day],
+
+          on_split: -> (value) {
+            year, month, day = value.chars.each_slice(2).map(&:join).map(&:to_i)
+            [year + birthday_base, month, day]
+          },
+
+          on_join: -> (values) {
+            year, month, day = values.map(&:to_i)
+            '%02d%02d%02d' % [year - birthday_base, month, day]
+          }
+        }
+
+        def birthday_base
+          birthday_era == 'showa' ? 1925 : birthday_era == 'heisei' ? 1988 : 0
+        end
+      end
+
+      model = model_class.create!(
+        birthday_era:   'heisei',
+        birthday_year:  1989,
+        birthday_month: 7,
+        birthday_day:   7
+      )
+
+      model.birthday = '010707'
+
+      model = model_class.find(model.id)
+
+      model.birthday_year.should  == 1989
+      model.birthday_month.should == 7
+      model.birthday_day.should   == 7
     end
   end
 end
