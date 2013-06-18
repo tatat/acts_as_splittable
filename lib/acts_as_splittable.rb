@@ -6,7 +6,7 @@ require 'acts_as_splittable/splittable'
 module ActsAsSplittable
 
   def acts_as_splittable(options = {})
-    options = options.reverse_merge!(
+    options.reverse_merge!(
       callbacks:       true,
       predicates:      false,
       join_on_change:  false,
