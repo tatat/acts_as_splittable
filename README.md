@@ -139,6 +139,38 @@ p splittable.email_local  #=> "splittable"
 p splittable.email_domain #=> "example.com"
 ```
 
+### Automatically (without callbacks)
+
+```ruby
+class Splittable < ActiveRecord::Base
+  
+  acts_as_splittable split_on_change: true, join_on_change: true, callbacks: false
+
+  # ...
+end
+```
+
+then
+
+```ruby
+splittable = Splittable.new(
+  email_local:   'splittable',
+  email_domain:  'example.com',
+)
+
+p splittable.email  #=> "splittable@example.com"
+p splittable.valid? #=> true
+```
+
+and
+
+```ruby
+splittable = Splittable.find(splittable_id)
+
+p splittable.email_local  #=> "splittable"
+p splittable.email_domain #=> "example.com"
+```
+
 Contributing
 --------------------
 
