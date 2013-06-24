@@ -7,8 +7,8 @@ require "acts_as_splittable/version"
 Gem::Specification.new do |s|
   s.name        = "acts_as_splittable"
   s.version     = ActsAsSplittable::VERSION
-  s.authors     = ["tatat", "takkkun"]
-  s.email       = ["ioiioioloo@gmail.com", "heartery@gmail.com"]
+  s.authors     = ["tatat", "takkkun", "wneko"]
+  s.email       = ["ioiioioloo@gmail.com", "heartery@gmail.com", "aoki@u-ne.co"]
   s.homepage    = "https://github.com/tatat/acts_as_splittable"
   s.summary     = "Create virtual attributes."
   s.description = "Create virtual attributes."
