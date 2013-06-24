@@ -171,6 +171,24 @@ p splittable.email_local  #=> "splittable"
 p splittable.email_domain #=> "example.com"
 ```
 
+### Use Delimiter (Shorthand)
+
+```ruby
+class Splittable < ActiveRecord::Base
+  
+  acts_as_splittable split_on_change: true, join_on_change: true
+
+  splittable :email, delimiter: '@', partials: [:email_local, :email_domain]
+  # :delimiter will be expanded to:
+  # {
+  #   split: ['@'],
+  #   on_join: Proc.new{|values| values.join('@')}
+  # }
+
+  # ...
+end
+```
+
 Contributing
 --------------------
 
