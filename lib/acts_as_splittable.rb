@@ -33,19 +33,43 @@ module ActsAsSplittable
   module ClassMethods
     attr_writer :splittable_options
 
-    def splittable_options(other_options = {})
+    def splittable_options
       @splittable_options ||= {}
     end
 
     def with_splittable_options(other_options = {})
-      original_options        = splittable_options
-      self.splittable_options = splittable_options.merge(other_options)
+      old = splittable_options
+      self.splittable_options = old.merge(other_options)
       Proc.new.(splittable_options)
-      self.splittable_options = original_options
+    ensure
+      self.splittable_options = old
     end
 
     def splittable_config
       @splittable_config ||= Config.new
+    end
+
+    def define_getter(partial)
+      define_method partial do
+        splittable_partials[partial]
+      end
+    end
+
+    def define_setter(partial, splitter)
+      define_method :"#{partial}=" do |value|
+        splittable_partials[partial] = value
+        splittable_changed_partials << partial unless splittable_changed_partial? partial
+
+        self.class.with_splittable_options split_on_change: false do |options|
+          join_column_values! splitter.name if options[:join_on_change]
+        end
+      end
+    end
+
+    def define_predicator(partial)
+      define_method :"#{partial}_changed?" do
+        splittable_changed_partial? partial
+      end
     end
 
     def splittable(column, options)
@@ -54,24 +78,9 @@ module ActsAsSplittable
       splittable_config.splitters << splitter
 
       splitter.partials.each do |partial|
-        define_method partial do
-          splittable_partials[partial]
-        end
-
-        define_method :"#{partial}=" do |value|
-          splittable_partials[partial] = value
-          splittable_changed_partials << partial unless splittable_changed_partial? partial
-
-          self.class.with_splittable_options split_on_change: false do |options|
-            join_column_values! splitter.name if options[:join_on_change]
-          end
-        end
-
-        if splittable_options[:predicates]
-          define_method :"#{partial}_changed?" do
-            splittable_changed_partial? partial
-          end
-        end
+        define_getter(partial)
+        define_setter(partial, splitter)
+        define_predicator(partial) if splittable_options[:predicates]
       end
 
       if splittable_options[:split_on_change]

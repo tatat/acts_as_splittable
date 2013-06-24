@@ -1,14 +1,17 @@
 module ActsAsSplittable
-
   module Splittable
+
+    def splittable_partials
+      @splittable_partials ||= {}
+    end
 
     def split_column_values!(columns = nil)
       splittable_aggregate_columns(columns) do |column, splitter|
         value = __send__(column) or next
 
         values = splitter.split(value, self)
-        splitter.partials.each_with_index do |partial, index|
-          __send__ :"#{partial}=", values[index]
+        splitter.partials.zip(values).each do |key, value|
+          __send__ :"#{key}=", value
         end
         reset_splittable_changed_partials splitter.partials
       end
@@ -24,10 +27,6 @@ module ActsAsSplittable
         reset_splittable_changed_partials splitter.partials
       end
       self
-    end
-
-    def splittable_partials
-      @splittable_partials ||= {}
     end
 
     protected
@@ -67,5 +66,4 @@ module ActsAsSplittable
     end
 
   end
-
 end
