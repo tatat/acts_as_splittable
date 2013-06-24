@@ -260,3 +260,22 @@ describe SplittableSplitOrJoinOnChangeWithAliasAttribute do
   end
 
 end
+
+describe SplittableUseDelimiter do
+
+  let (:splittable) do
+    SplittableUseDelimiter.new(email: 'splittable@example.com')
+  end
+
+  it 'should split value when value is set' do
+    splittable.email_local.should == 'splittable'
+    splittable.email_domain.should == 'example.com'
+  end
+
+  it 'should join partials before save' do
+    splittable.email_local  = 'splittable+1'
+    splittable.email_domain = 'mail.example.com'
+    splittable.email.should == 'splittable+1@mail.example.com'
+  end
+
+end

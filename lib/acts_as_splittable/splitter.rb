@@ -11,8 +11,12 @@ module ActsAsSplittable
     }.freeze
 
     def initialize(options = {})
-      @options = DEFAULTS.merge(options)
-      @options.each do |key, value|
+      @options = options
+
+      options   = DEFAULTS.merge(options)
+      delimiter = options.delete(:delimiter)
+
+      options.each do |key, value|
         case key
         when *ALIASES.keys
           self[ALIASES[key]] = value
@@ -20,6 +24,12 @@ module ActsAsSplittable
           self[key] = value
         end
       end
+
+      if delimiter
+        self.for_split = [delimiter]
+        self.on_join   = Proc.new {|values| values.join(delimiter)}
+      end
+
       self.partials ||= pattern_members
     end
 

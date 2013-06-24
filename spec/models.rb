@@ -66,3 +66,11 @@ class SplittableSplitOrJoinOnChangeWithAliasAttribute < ActiveRecord::Base
 
   alias_attribute :email_address, :email
 end
+
+class SplittableUseDelimiter < ActiveRecord::Base
+  self.table_name = 'splittables'
+
+  acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
+
+  splittable :email, delimiter: '@', partials: [:email_local, :email_domain]
+end
