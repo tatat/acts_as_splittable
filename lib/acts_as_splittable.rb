@@ -2,6 +2,8 @@ $LOAD_PATH.unshift File.dirname(__FILE__)
 
 require 'active_record'
 require 'acts_as_splittable/splittable'
+require 'acts_as_splittable/splitter'
+require 'acts_as_splittable/config'
 
 module ActsAsSplittable
 
@@ -29,65 +31,37 @@ module ActsAsSplittable
   end
 
   module ClassMethods
-    SPLITTABLE_DEFAULT_JOIN_PROCESS = Proc.new{|values| values.join }
-
     attr_writer :splittable_options
 
-    def splittable_options(other_options = {})
+    def splittable_options
       @splittable_options ||= {}
     end
 
     def with_splittable_options(other_options = {})
-      original_options        = splittable_options
-      self.splittable_options = splittable_options.merge(other_options)
+      old = splittable_options
+      self.splittable_options = old.merge(other_options)
       Proc.new.(splittable_options)
-      self.splittable_options = original_options
+    ensure
+      self.splittable_options = old
     end
 
-    def splittable_columns
-      @splittable_columns ||= {}
+    def splittable_config
+      @splittable_config ||= Config.new
     end
 
     def splittable(column, options)
-      column                     = column.to_sym
-      partials                   = (options[:partials] || options[:pattern].names).map(&:to_sym)
-      splittable_columns[column] = [options[:split], options[:pattern], partials, options[:on_split], options[:on_join] || SPLITTABLE_DEFAULT_JOIN_PROCESS]
+      options.merge!(name: column.to_sym)
+      splitter = Splitter.new(options)
+      splittable_config.splitters << splitter
 
-      partials.each do |partial|
-        define_method partial do
-          splittable_partials[partial]
-        end
-
-        define_method :"#{partial}=" do |value|
-          splittable_partials[partial] = value
-          splittable_changed_partials << partial unless splittable_changed_partial? partial
-
-          self.class.with_splittable_options split_on_change: false do |options|
-            join_column_values! column if options[:join_on_change]
-          end
-        end
-
-        if splittable_options[:predicates]
-          define_method :"#{partial}_changed?" do
-            splittable_changed_partial? partial
-          end
-        end
+      splitter.partials.each do |partial|
+        define_splittable_getter(partial)
+        define_splittable_setter(partial, splitter)
+        define_splittable_predicator(partial) if splittable_options[:predicates]
       end
 
       if splittable_options[:split_on_change]
-        splittable_module.module_eval <<-"EOS"
-          def #{column}=(value)
-            if defined?(super)
-              super
-            elsif respond_to?(:write_attribute, true)
-              write_attribute :#{column}, value
-            end
-            
-            self.class.with_splittable_options join_on_change: false do
-              split_column_values! :#{column}
-            end
-          end
-        EOS
+        define_splittable_setter_hook(splitter.name)
       end
     end
 
@@ -95,7 +69,7 @@ module ActsAsSplittable
       super
 
       child.splittable_options = splittable_options.dup
-      child.splittable_columns.merge! splittable_columns.dup
+      child.splittable_config.inherit! splittable_config
     end
 
     protected
@@ -103,8 +77,54 @@ module ActsAsSplittable
     def splittable_module
       @splittable_module ||= Module.new
     end
-  end
+    
+    private
 
+    def define_splittable_getter(partial)
+      define_method partial do
+        splittable_partials[partial]
+      end
+    end
+
+    def define_splittable_setter(partial, splitter)
+      define_method :"#{partial}=" do |value|
+        splittable_partials[partial] = value
+
+        unless splittable_changed_partial? partial
+          splittable_changed_partials << partial
+        end
+
+        self.class.with_splittable_options split_on_change: false do |options|
+          if options[:join_on_change]
+            join_column_values! splitter.name 
+          end
+        end
+      end
+    end
+
+    def define_splittable_predicator(partial)
+      define_method :"#{partial}_changed?" do
+        splittable_changed_partial? partial
+      end
+    end
+
+    def define_splittable_setter_hook(name)
+      splittable_module.module_eval do
+        define_method("#{name}=") do |value|
+          if defined?(super)
+            super(value)
+          elsif respond_to?(:write_attribute, true)
+            write_attribute name, value
+          end
+
+          self.class.with_splittable_options join_on_change: false do
+            split_column_values! name
+          end
+        end
+      end
+    end
+
+  end
 end
 
 ActiveRecord::Base.extend ActsAsSplittable
