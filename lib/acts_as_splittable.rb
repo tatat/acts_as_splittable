@@ -2,6 +2,8 @@ $LOAD_PATH.unshift File.dirname(__FILE__)
 
 require 'active_record'
 require 'acts_as_splittable/splittable'
+require 'acts_as_splittable/splitter'
+require 'acts_as_splittable/config'
 
 module ActsAsSplittable
 
@@ -29,8 +31,6 @@ module ActsAsSplittable
   end
 
   module ClassMethods
-    SPLITTABLE_DEFAULT_JOIN_PROCESS = Proc.new{|values| values.join }
-
     attr_writer :splittable_options
 
     def splittable_options(other_options = {})
@@ -44,16 +44,16 @@ module ActsAsSplittable
       self.splittable_options = original_options
     end
 
-    def splittable_columns
-      @splittable_columns ||= {}
+    def splittable_config
+      @splittable_config ||= Config.new
     end
 
     def splittable(column, options)
-      column                     = column.to_sym
-      partials                   = (options[:partials] || options[:pattern].names).map(&:to_sym)
-      splittable_columns[column] = [options[:split], options[:pattern], partials, options[:on_split], options[:on_join] || SPLITTABLE_DEFAULT_JOIN_PROCESS]
+      options.merge!(name: column.to_sym)
+      splitter = Splitter.new(options)
+      splittable_config.splitters << splitter
 
-      partials.each do |partial|
+      splitter.partials.each do |partial|
         define_method partial do
           splittable_partials[partial]
         end
@@ -63,7 +63,7 @@ module ActsAsSplittable
           splittable_changed_partials << partial unless splittable_changed_partial? partial
 
           self.class.with_splittable_options split_on_change: false do |options|
-            join_column_values! column if options[:join_on_change]
+            join_column_values! splitter.name if options[:join_on_change]
           end
         end
 
@@ -76,15 +76,15 @@ module ActsAsSplittable
 
       if splittable_options[:split_on_change]
         splittable_module.module_eval <<-"EOS"
-          def #{column}=(value)
+          def #{splitter.name}=(value)
             if defined?(super)
               super
             elsif respond_to?(:write_attribute, true)
-              write_attribute :#{column}, value
+              write_attribute :#{splitter.name}, value
             end
             
             self.class.with_splittable_options join_on_change: false do
-              split_column_values! :#{column}
+              split_column_values! :#{splitter.name}
             end
           end
         EOS
@@ -95,7 +95,7 @@ module ActsAsSplittable
       super
 
       child.splittable_options = splittable_options.dup
-      child.splittable_columns.merge! splittable_columns.dup
+      child.splittable_config.inherit! splittable_config
     end
 
     protected

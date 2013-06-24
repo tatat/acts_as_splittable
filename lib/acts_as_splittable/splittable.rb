@@ -2,49 +2,27 @@ module ActsAsSplittable
 
   module Splittable
 
-    def split_column_values!(column = nil)
-      if column.nil?
-        self.class.splittable_columns.each_key{|key| send __method__, key }
-      else
-        column                                      = column.to_sym
-        split, pattern, partials, on_split, on_join = self.class.splittable_columns[column]
-        value                                       = send(column)
+    def split_column_values!(columns = nil)
+      splittable_aggregate_columns(columns) do |column, splitter|
+        value = __send__(column) or next
 
-        unless value.nil?
-          values = if on_split
-            splittable_run_callback(on_split, value)
-          elsif value
-            if split
-              value.to_s.split *(split.is_a?(Array) ? split : [split])
-            elsif matches = value.to_s.match(pattern)
-              matches[1..(matches.length - 1)]
-            end
-          end || []
-
-          partials.each_with_index do |partial, index|
-            send :"#{partial}=", values[index]
-          end
-
-          reset_splittable_changed_partials partials
+        values = splitter.split(value, self)
+        splitter.partials.each_with_index do |partial, index|
+          __send__ :"#{partial}=", values[index]
         end
+        reset_splittable_changed_partials splitter.partials
       end
-
       self
     end
 
-    def join_column_values!(column = nil)
-      if column.nil?
-        self.class.splittable_columns.each_key{|key| send __method__, key }
-      else
-        split, pattern, partials, on_split, on_join = self.class.splittable_columns[column.to_sym]
-        values                                      = partials.map{|partial| send(partial) }
+    def join_column_values!(columns = nil)
+      splittable_aggregate_columns(columns) do |column, splitter|
+        values = splitter.partials.map {|partial| __send__(partial) }
+        next if values.include?(nil)
 
-        unless values.any?(&:nil?)
-          send :"#{column}=", splittable_run_callback(on_join, values)
-          reset_splittable_changed_partials partials
-        end
+        __send__ :"#{column}=", splitter.restore(values, self)
+        reset_splittable_changed_partials splitter.partials
       end
-
       self
     end
 
@@ -70,6 +48,15 @@ module ActsAsSplittable
     end
 
     private
+    def splittable_aggregate_columns(columns = nil)
+      config = self.class.splittable_config
+      columns = columns ? Array(columns) : config.splitters.collect(&:name)
+      columns.collect!(&:to_sym)
+
+      columns.collect do |column|
+        yield(column, config.splitter(column)) if block_given?
+      end
+    end
 
     def splittable_run_callback(callback, *args)
       if callback.is_a?(Proc)
@@ -78,7 +65,7 @@ module ActsAsSplittable
         send(callback, *args)
       end
     end
-    
+
   end
 
 end
