@@ -282,7 +282,7 @@ end
 
 describe SplittableUseTypeCasting do
 
-  shared_examples_for 'splittable type casting' do
+  shared_examples_for 'splittable typecasting' do
 
     it 'should typecast' do
       splittable.lat.should == 35.629902
@@ -294,34 +294,31 @@ describe SplittableUseTypeCasting do
   context 'with method' do
     let (:splittable) do
       Class.new(SplittableUseTypeCasting) {
-        acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
         splittable :latlng, delimiter: ',', attributes: [:lat, :lng], type: Float
       }.new(latlng: '35.629902,139.793934')
     end
 
-    it_behaves_like 'splittable type casting'
+    it_behaves_like 'splittable typecasting'
   end
 
   context 'with Proc' do
     let (:splittable) do
       Class.new(SplittableUseTypeCasting) {
-        acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
         splittable :latlng, delimiter: ',', attributes: [:lat, :lng], type: Proc.new{|value| value.to_f }
       }.new(latlng: '35.629902,139.793934')
     end
 
-    it_behaves_like 'splittable type casting'
+    it_behaves_like 'splittable typecasting'
   end
 
   context 'with Symbol' do
     let (:splittable) do
       Class.new(SplittableUseTypeCasting) {
-        acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
         splittable :latlng, delimiter: ',', attributes: [:lat, :lng], type: :to_f
       }.new(latlng: '35.629902,139.793934')
     end
 
-    it_behaves_like 'splittable type casting'
+    it_behaves_like 'splittable typecasting'
   end
 
 end

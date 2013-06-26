@@ -77,4 +77,6 @@ end
 
 class SplittableUseTypeCasting < ActiveRecord::Base
   self.table_name = 'splittables'
+
+  acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
 end

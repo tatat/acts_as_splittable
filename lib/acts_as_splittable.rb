@@ -69,10 +69,18 @@ module ActsAsSplittable
       super
 
       child.splittable_options = splittable_options.dup
+
+      if child.splittable_options[:split_on_change]
+        child.splittable_module = splittable_module.dup
+        child.send(:include, child.splittable_module)
+      end
+        
       child.splittable_config.inherit! splittable_config
     end
 
     protected
+
+    attr_writer :splittable_module
 
     def splittable_module
       @splittable_module ||= Module.new
