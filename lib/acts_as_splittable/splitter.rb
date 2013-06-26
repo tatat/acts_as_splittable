@@ -1,5 +1,5 @@
 module ActsAsSplittable
-  class Splitter < Struct.new(:name, :for_split, :pattern, :attributes, :on_split, :on_join)
+  class Splitter < Struct.new(:name, :for_split, :pattern, :attributes, :on_split, :on_join, :type)
     DEFAULTS = {
       on_join: Proc.new {|values| values.join }
     }.freeze
@@ -35,7 +35,7 @@ module ActsAsSplittable
     end
 
     def split(value, delegate = nil)
-      case
+      cast case
       when on_split
         delegation(delegate || self, on_split, value)
       when for_split
@@ -62,6 +62,18 @@ module ActsAsSplittable
 
     def pattern_members
       pattern.names.map(&:to_sym)
+    end
+
+    def cast(values)
+      case type
+      when Proc, Symbol
+        values.map(&type)
+      when Class
+        name = type.name.to_sym
+        
+        values.map{|value| Object.__send__(name, value) } if
+          Object.private_method_defined?(name)
+      end || values
     end
   end
 end

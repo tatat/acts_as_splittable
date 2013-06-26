@@ -279,3 +279,49 @@ describe SplittableUseDelimiter do
   end
 
 end
+
+describe SplittableUseTypeCasting do
+
+  shared_examples_for 'splittable type casting' do
+
+    it 'should typecast' do
+      splittable.lat.should == 35.629902
+      splittable.lng.should == 139.793934
+    end
+
+  end
+
+  context 'with method' do
+    let (:splittable) do
+      Class.new(SplittableUseTypeCasting) {
+        acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
+        splittable :latlng, delimiter: ',', attributes: [:lat, :lng], type: Float
+      }.new(latlng: '35.629902,139.793934')
+    end
+
+    it_behaves_like 'splittable type casting'
+  end
+
+  context 'with Proc' do
+    let (:splittable) do
+      Class.new(SplittableUseTypeCasting) {
+        acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
+        splittable :latlng, delimiter: ',', attributes: [:lat, :lng], type: Proc.new{|value| value.to_f }
+      }.new(latlng: '35.629902,139.793934')
+    end
+
+    it_behaves_like 'splittable type casting'
+  end
+
+  context 'with Symbol' do
+    let (:splittable) do
+      Class.new(SplittableUseTypeCasting) {
+        acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
+        splittable :latlng, delimiter: ',', attributes: [:lat, :lng], type: :to_f
+      }.new(latlng: '35.629902,139.793934')
+    end
+
+    it_behaves_like 'splittable type casting'
+  end
+
+end

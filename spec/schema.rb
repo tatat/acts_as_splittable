@@ -7,6 +7,7 @@ ActiveRecord::Schema.define version: 0 do
     t.string   "phone_number"
     t.string   "birthday_era"
     t.string   "birthday"
+    t.string   "latlng"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

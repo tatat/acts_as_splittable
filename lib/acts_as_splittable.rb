@@ -77,7 +77,7 @@ module ActsAsSplittable
     def splittable_module
       @splittable_module ||= Module.new
     end
-    
+
     private
 
     def define_splittable_getter(attribute)

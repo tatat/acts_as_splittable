@@ -74,3 +74,7 @@ class SplittableUseDelimiter < ActiveRecord::Base
 
   splittable :email, delimiter: '@', attributes: [:email_local, :email_domain]
 end
+
+class SplittableUseTypeCasting < ActiveRecord::Base
+  self.table_name = 'splittables'
+end
