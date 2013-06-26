@@ -1,50 +1,56 @@
 module ActsAsSplittable
   module Splittable
 
-    def splittable_partials
-      @splittable_partials ||= {}
+    def splittable_attributes
+      @splittable_attributes ||= {}
     end
+
+    alias_method :splittable_partials, :splittable_attributes
 
     def split_column_values!(columns = nil)
       splittable_aggregate_columns(columns) do |column, splitter|
         value = __send__(column) or next
 
         values = splitter.split(value, self)
-        splitter.partials.zip(values).each do |key, value|
+        splitter.attributes.zip(values).each do |key, value|
           __send__ :"#{key}=", value
         end
-        reset_splittable_changed_partials splitter.partials
+        reset_splittable_changed_attributes splitter.attributes
       end
       self
     end
 
     def join_column_values!(columns = nil)
       splittable_aggregate_columns(columns) do |column, splitter|
-        values = splitter.partials.map {|partial| __send__(partial) }
+        values = splitter.attributes.map {|partial| __send__(partial) }
         next if values.include?(nil)
 
         __send__ :"#{column}=", splitter.restore(values, self)
-        reset_splittable_changed_partials splitter.partials
+        reset_splittable_changed_attributes splitter.attributes
       end
       self
     end
 
     protected
 
-    attr_writer :splittable_changed_partials
+    attr_writer :splittable_changed_attributes
 
-    def splittable_changed_partials
-      @splittable_changed_partials ||= []
+    def splittable_changed_attributes
+      @splittable_changed_attributes ||= []
     end
 
-    def splittable_changed_partial?(partial)
-      splittable_changed_partials.include? partial
+    def splittable_changed_attribute?(attribute)
+      splittable_changed_attributes.include? attribute
     end
 
-    def reset_splittable_changed_partials(partials)
-      self.splittable_changed_partials.uniq!
-      self.splittable_changed_partials -= partials
+    def reset_splittable_changed_attributes(attributes)
+      self.splittable_changed_attributes.uniq!
+      self.splittable_changed_attributes -= attributes
     end
+
+    alias_method :splittable_changed_partials, :splittable_changed_attributes
+    alias_method :splittable_changed_partial?, :splittable_changed_attribute?
+    alias_method :reset_splittable_changed_partials, :reset_splittable_changed_attributes
 
     private
     def splittable_aggregate_columns(columns = nil)

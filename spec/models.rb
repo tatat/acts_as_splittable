@@ -5,9 +5,9 @@ class Splittable < ActiveRecord::Base
 
   acts_as_splittable predicates: true
 
-  splittable :email,        split: ['@', 2], partials: [:email_local, :email_domain], on_join: EMAIL_JOIN_PROCESS
+  splittable :email,        split: ['@', 2], attributes: [:email_local, :email_domain], on_join: EMAIL_JOIN_PROCESS
   splittable :postal_code,  pattern: /\A(?<postal_code1>[0-9]{3})(?<postal_code2>[0-9]{4})\Z/
-  splittable :phone_number, partials: [:phone_number1, :phone_number2, :phone_number3], on_split: :split_phone_number, on_join: :join_phone_number
+  splittable :phone_number, attributes: [:phone_number1, :phone_number2, :phone_number3], on_split: :split_phone_number, on_join: :join_phone_number
 
   protected
 
@@ -72,5 +72,5 @@ class SplittableUseDelimiter < ActiveRecord::Base
 
   acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
 
-  splittable :email, delimiter: '@', partials: [:email_local, :email_domain]
+  splittable :email, delimiter: '@', attributes: [:email_local, :email_domain]
 end

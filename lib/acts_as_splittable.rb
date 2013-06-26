@@ -54,10 +54,10 @@ module ActsAsSplittable
       splitter = Splitter.new(options)
       splittable_config.splitters << splitter
 
-      splitter.partials.each do |partial|
-        define_splittable_getter(partial)
-        define_splittable_setter(partial, splitter)
-        define_splittable_predicator(partial) if splittable_options[:predicates]
+      splitter.attributes.each do |attribute|
+        define_splittable_getter(attribute)
+        define_splittable_setter(attribute, splitter)
+        define_splittable_predicator(attribute) if splittable_options[:predicates]
       end
 
       if splittable_options[:split_on_change]
@@ -80,18 +80,18 @@ module ActsAsSplittable
     
     private
 
-    def define_splittable_getter(partial)
-      define_method partial do
-        splittable_partials[partial]
+    def define_splittable_getter(attribute)
+      define_method attribute do
+        splittable_attributes[attribute]
       end
     end
 
-    def define_splittable_setter(partial, splitter)
-      define_method :"#{partial}=" do |value|
-        splittable_partials[partial] = value
+    def define_splittable_setter(attribute, splitter)
+      define_method :"#{attribute}=" do |value|
+        splittable_attributes[attribute] = value
 
-        unless splittable_changed_partial? partial
-          splittable_changed_partials << partial
+        unless splittable_changed_attribute? attribute
+          splittable_changed_attributes << attribute
         end
 
         self.class.with_splittable_options split_on_change: false do |options|
@@ -102,9 +102,9 @@ module ActsAsSplittable
       end
     end
 
-    def define_splittable_predicator(partial)
-      define_method :"#{partial}_changed?" do
-        splittable_changed_partial? partial
+    def define_splittable_predicator(attribute)
+      define_method :"#{attribute}_changed?" do
+        splittable_changed_attribute? attribute
       end
     end
 

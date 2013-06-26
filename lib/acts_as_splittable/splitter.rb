@@ -1,13 +1,14 @@
 module ActsAsSplittable
-  class Splitter < Struct.new(:name, :for_split, :pattern, :partials, :on_split, :on_join)
+  class Splitter < Struct.new(:name, :for_split, :pattern, :attributes, :on_split, :on_join)
     DEFAULTS = {
       on_join: Proc.new {|values| values.join }
     }.freeze
 
     ALIASES = {
-      split:  :for_split,
-      column: :name,
-      regex:  :pattern,
+      split:    :for_split,
+      column:   :name,
+      regex:    :pattern,
+      partials: :attributes,
     }.freeze
 
     def initialize(options = {})
@@ -30,7 +31,7 @@ module ActsAsSplittable
         self.on_join   = Proc.new {|values| values.join(delimiter)}
       end
 
-      self.partials ||= pattern_members
+      self.attributes ||= pattern_members
     end
 
     def split(value, delegate = nil)

@@ -34,9 +34,9 @@ class Splittable < ActiveRecord::Base
 
   acts_as_splittable
 
-  splittable :email,        split: ['@', 2], partials: [:email_local, :email_domain], on_join: Proc.new{|partials| partials.join('@') }
+  splittable :email,        split: ['@', 2], attributes: [:email_local, :email_domain], on_join: Proc.new{|values| values.join('@') }
   splittable :postal_code,  pattern: /\A(?<postal_code1>[0-9]{3})(?<postal_code2>[0-9]{4})\Z/
-  splittable :phone_number, partials: [:phone_number1, :phone_number2, :phone_number3], on_split: :split_phone_number, on_join: :join_phone_number
+  splittable :phone_number, attributes: [:phone_number1, :phone_number2, :phone_number3], on_split: :split_phone_number, on_join: :join_phone_number
 
   validates :email_local,   format: { with: /\A[a-zA-Z0-9_.-]+\Z/ }
   validates :email_domain,  format: { with: /\A(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,4}\Z/ }
@@ -178,7 +178,7 @@ class Splittable < ActiveRecord::Base
   
   acts_as_splittable split_on_change: true, join_on_change: true
 
-  splittable :email, delimiter: '@', partials: [:email_local, :email_domain]
+  splittable :email, delimiter: '@', attributes: [:email_local, :email_domain]
   # :delimiter will be expanded to:
   # {
   #   split: ['@'],
