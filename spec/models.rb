@@ -48,7 +48,8 @@ end
 class SplittableSplitOrJoinOnChange < ActiveRecord::Base
   self.table_name = 'splittables'
 
-  acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
+  acts_as_hasty_splittable
+  # same as `acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false`
 
   splittable :email, pattern: EMAIL_SPLIT_PATTERN, on_join: EMAIL_JOIN_PROCESS
 
@@ -78,5 +79,5 @@ end
 class SplittableUseTypeCasting < ActiveRecord::Base
   self.table_name = 'splittables'
 
-  acts_as_splittable join_on_change: true, split_on_change: true, callbacks: false
+  acts_as_hasty_splittable
 end

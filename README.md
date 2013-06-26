@@ -144,7 +144,8 @@ p splittable.email_domain #=> "example.com"
 ```ruby
 class Splittable < ActiveRecord::Base
   
-  acts_as_splittable split_on_change: true, join_on_change: true, callbacks: false
+  acts_as_hasty_splittable
+  # same as `acts_as_splittable split_on_change: true, join_on_change: true, callbacks: false`
 
   # ...
 end

@@ -30,6 +30,10 @@ module ActsAsSplittable
     end
   end
 
+  def acts_as_hasty_splittable(options = {})
+    acts_as_splittable options.reverse_merge(join_on_change: true, split_on_change: true, callbacks: false)
+  end
+
   module ClassMethods
     attr_writer :splittable_options
 
