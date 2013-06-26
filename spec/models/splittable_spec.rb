@@ -289,6 +289,12 @@ describe SplittableUseTypeCasting do
       splittable.lng.should == 139.793934
     end
 
+    it 'should restore' do
+      splittable.lat = 51.476877
+      splittable.lng = -0.00033
+      splittable.latlng.should == '51.476877,-0.00033'
+    end
+
   end
 
   context 'with method' do
