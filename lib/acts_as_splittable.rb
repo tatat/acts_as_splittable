@@ -6,14 +6,33 @@ require 'acts_as_splittable/splitter'
 require 'acts_as_splittable/config'
 
 module ActsAsSplittable
-
-  def acts_as_splittable(options = {})
-    options.reverse_merge!(
+  class << self
+    DEFAULT_OPTIONS = {
       callbacks:       true,
       predicates:      false,
       join_on_change:  false,
       split_on_change: false,
-    )
+      suppress_on_nil: true,
+    }
+
+    def default_options(*args)
+      case args.length
+      when 0
+        @default_options ||= DEFAULT_OPTIONS
+      when 1
+        self.default_options = args.first
+      else
+        raise ArgumentError, "wrong number of arguments (#{args.length} for 0..1) (ArgumentError)"
+      end
+    end
+
+    def default_options=(options)
+      default_options.merge! options
+    end
+  end
+
+  def acts_as_splittable(options = {})
+    options = options.reverse_merge ActsAsSplittable.default_options
 
     extend  ClassMethods
     include Splittable

@@ -81,3 +81,15 @@ class SplittableUseTypeCasting < ActiveRecord::Base
 
   acts_as_hasty_splittable
 end
+
+class SplittableBase < ActiveRecord::Base
+  self.table_name = 'splittables'
+
+  def self.define_splittable(options = {})
+    acts_as_splittable options
+    splittable :email, delimiter: '@', attributes: [:email_local, :email_domain]
+  end
+end
+
+class SplittableSuppressOnNil < SplittableBase; define_splittable end
+class SplittableNotSuppressOnNil < SplittableBase; define_splittable suppress_on_nil: false end

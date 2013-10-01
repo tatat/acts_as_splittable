@@ -190,6 +190,21 @@ class Splittable < ActiveRecord::Base
 end
 ```
 
+Options
+--------------------
+
+You can change default options
+
+```ruby
+ActsAsSplittable.default_options = {
+  callbacks:       true,
+  predicates:      false,
+  join_on_change:  false,
+  split_on_change: false,
+  suppress_on_nil: true,
+}
+```
+
 Contributing
 --------------------
 

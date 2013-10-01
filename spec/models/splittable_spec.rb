@@ -328,3 +328,40 @@ describe SplittableUseTypeCasting do
   end
 
 end
+
+describe SplittableSuppressOnNil do
+  it "should join columns" do
+    splittable = described_class.new(email_local: 'splittable', email_domain: 'example.com').join_column_values!
+    splittable.email.should_not be_nil
+  end
+
+  it "should not join columns" do
+    splittable = described_class.new(email_local: 'splittable', email_domain: nil).join_column_values!
+    splittable.email.should be_nil
+  end
+
+  it "should split columns" do
+    splittable = described_class.new(email: 'splittable@example.com').split_column_values!
+    splittable.email_local.should == 'splittable'
+    splittable.email_domain.should == 'example.com'
+  end
+
+  it "should not split columns" do
+    splittable = described_class.new(email: nil, email_local: 'splittable', email_domain: 'example.com').split_column_values!
+    splittable.email_local.should == 'splittable'
+    splittable.email_domain.should == 'example.com'
+  end
+end
+
+describe SplittableNotSuppressOnNil do
+  it "should join columns" do
+    splittable = described_class.new(email_local: 'splittable', email_domain: nil).join_column_values!
+    splittable.email.should == 'splittable@'
+  end
+
+  it "should split columns" do
+    splittable = described_class.new(email: nil, email_local: 'splittable', email_domain: 'example.com').split_column_values!
+    splittable.email_local.should be_nil
+    splittable.email_domain.should be_nil
+  end
+end
