@@ -22,7 +22,7 @@ module ActsAsSplittable
       when 1
         self.default_options = args.first
       else
-        raise ArgumentError, "wrong number of arguments (#{args.length} for 0..1) (ArgumentError)"
+        raise ArgumentError, "wrong number of arguments (#{args.length} for 0..1)"
       end
     end
 
