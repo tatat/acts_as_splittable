@@ -11,18 +11,21 @@ module ActsAsSplittable
       partials: :attributes,
     }.freeze
 
-    def initialize(options = {})
-      @options = options
-
+    def initialize(klass, options = {})
       options   = DEFAULTS.merge(options)
       delimiter = options.delete(:delimiter)
+      
+      @klass   = klass
+      @options = {}
 
       options.each do |key, value|
         case key
         when *ALIASES.keys
           self[ALIASES[key]] = value
-        else
+        when *members.map(&:to_sym)
           self[key] = value
+        else
+          @options[key.to_sym] = value
         end
       end
 
@@ -51,6 +54,11 @@ module ActsAsSplittable
       delegation(delegate || self, on_join, values)
     end
 
+    def method_missing(name, *args)
+      super unless name.to_s[-1] == '?'
+      define_predicate_method_for_options(name)
+    end
+
     private
     def delegation(target, method, *args)
       if method.is_a?(Proc)
@@ -74,6 +82,16 @@ module ActsAsSplittable
         values.map{|value| Object.__send__(name, value) } if
           Object.private_method_defined?(name)
       end || values
+    end
+
+    def define_predicate_method_for_options(name)
+      key = name.to_s.chop.to_sym
+
+      self.class.__send__ :define_method, name do
+        !! (@options.key?(key) ? @options[key] : @klass.splittable_options[key])
+      end
+
+      __send__ name
     end
   end
 end

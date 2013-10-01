@@ -12,7 +12,7 @@ module ActsAsSplittable
       predicates:      false,
       join_on_change:  false,
       split_on_change: false,
-      suppress_on_nil: true,
+      allow_nil:       false,
     }
 
     def default_options(*args)
@@ -73,14 +73,15 @@ module ActsAsSplittable
     end
 
     def splittable(column, options)
-      options.merge!(name: column.to_sym)
-      splitter = Splitter.new(options)
+      options  = options.merge(name: column.to_sym)
+      splitter = Splitter.new(self, options)
+
       splittable_config.splitters << splitter
 
       splitter.attributes.each do |attribute|
         define_splittable_getter(attribute)
         define_splittable_setter(attribute, splitter)
-        define_splittable_predicator(attribute) if splittable_options[:predicates]
+        define_splittable_predicator(attribute) if splitter.predicates?
       end
 
       if splittable_options[:split_on_change]

@@ -201,7 +201,7 @@ ActsAsSplittable.default_options = {
   predicates:      false,
   join_on_change:  false,
   split_on_change: false,
-  suppress_on_nil: true,
+  allow_nil:       false,
 }
 ```
 

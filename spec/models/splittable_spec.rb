@@ -329,7 +329,7 @@ describe SplittableUseTypeCasting do
 
 end
 
-describe SplittableSuppressOnNil do
+describe SplittableNotAllowNil do
   it "should join columns" do
     splittable = described_class.new(email_local: 'splittable', email_domain: 'example.com').join_column_values!
     splittable.email.should_not be_nil
@@ -351,9 +351,22 @@ describe SplittableSuppressOnNil do
     splittable.email_local.should == 'splittable'
     splittable.email_domain.should == 'example.com'
   end
+
+  context "when option `allow_nil' is overridden." do
+    it "should join columns" do
+      splittable = described_class.new(email_sub_local: 'splittable', email_sub_domain: nil).join_column_values!
+      splittable.email_sub.should == 'splittable@'
+    end
+
+    it "should split columns" do
+      splittable = described_class.new(email_sub: nil, email_sub_local: 'splittable', email_sub_domain: 'example.com').split_column_values!
+      splittable.email_sub_local.should be_nil
+      splittable.email_sub_domain.should be_nil
+    end
+  end
 end
 
-describe SplittableNotSuppressOnNil do
+describe SplittableAllowNil do
   it "should join columns" do
     splittable = described_class.new(email_local: 'splittable', email_domain: nil).join_column_values!
     splittable.email.should == 'splittable@'
@@ -363,5 +376,18 @@ describe SplittableNotSuppressOnNil do
     splittable = described_class.new(email: nil, email_local: 'splittable', email_domain: 'example.com').split_column_values!
     splittable.email_local.should be_nil
     splittable.email_domain.should be_nil
+  end
+
+  context "when option `allow_nil' is overridden." do
+    it "should not join columns" do
+      splittable = described_class.new(email_sub_local: 'splittable', email_sub_domain: nil).join_column_values!
+      splittable.email_sub.should be_nil
+    end
+
+    it "should not split columns" do
+      splittable = described_class.new(email_sub: nil, email_sub_local: 'splittable', email_sub_domain: 'example.com').split_column_values!
+      splittable.email_sub_local.should == 'splittable'
+      splittable.email_sub_domain.should == 'example.com'
+    end
   end
 end

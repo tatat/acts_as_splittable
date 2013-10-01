@@ -91,5 +91,13 @@ class SplittableBase < ActiveRecord::Base
   end
 end
 
-class SplittableSuppressOnNil < SplittableBase; define_splittable end
-class SplittableNotSuppressOnNil < SplittableBase; define_splittable suppress_on_nil: false end
+class SplittableNotAllowNil < SplittableBase
+  define_splittable
+  splittable :email_sub, delimiter: '@', attributes: [:email_sub_local, :email_sub_domain], allow_nil: true
+end
+
+class SplittableAllowNil < SplittableBase
+  define_splittable allow_nil: true
+  splittable :email_sub, delimiter: '@', attributes: [:email_sub_local, :email_sub_domain], allow_nil: false
+end
+

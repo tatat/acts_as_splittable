@@ -10,7 +10,7 @@ module ActsAsSplittable
     def split_column_values!(columns = nil)
       splittable_aggregate_columns(columns) do |column, splitter|
         value = __send__(column)
-        next if self.class.splittable_options[:suppress_on_nil] and value.nil?
+        next if not splitter.allow_nil? and value.nil?
 
         values = splitter.split(value, self)
         splitter.attributes.zip(values).each do |key, value|
@@ -24,7 +24,7 @@ module ActsAsSplittable
     def join_column_values!(columns = nil)
       splittable_aggregate_columns(columns) do |column, splitter|
         values = splitter.attributes.map {|partial| __send__(partial) }
-        next if self.class.splittable_options[:suppress_on_nil] and values.include?(nil)
+        next if not splitter.allow_nil? and values.include?(nil)
 
         __send__ :"#{column}=", splitter.restore(values, self)
         reset_splittable_changed_attributes splitter.attributes
