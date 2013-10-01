@@ -36,12 +36,9 @@ module ActsAsSplittable
 
     extend  ClassMethods
     include Splittable
+    include splittable_module
 
     self.splittable_options = options
-
-    if splittable_options[:split_on_change]
-      include splittable_module
-    end
 
     if splittable_options[:callbacks]
       after_initialize { new_record? or split_column_values! }
@@ -91,14 +88,9 @@ module ActsAsSplittable
 
     def inherited(child)
       super
-
       child.splittable_options = splittable_options.dup
-
-      if child.splittable_options[:split_on_change]
-        child.splittable_module = splittable_module.dup
-        child.send(:include, child.splittable_module)
-      end
-        
+      child.splittable_module  = splittable_module.dup
+      child.send(:include, child.splittable_module)
       child.splittable_config.inherit! splittable_config
     end
 
@@ -112,14 +104,18 @@ module ActsAsSplittable
 
     private
 
+    def define_splittable_method(name, &block)
+      splittable_module.__send__ :define_method, name, &block
+    end
+
     def define_splittable_getter(attribute)
-      define_method attribute do
+      define_splittable_method attribute do
         splittable_attributes[attribute]
       end
     end
 
     def define_splittable_setter(attribute, splitter)
-      define_method :"#{attribute}=" do |value|
+      define_splittable_method :"#{attribute}=" do |value|
         splittable_attributes[attribute] = value
 
         unless splittable_changed_attribute? attribute
@@ -135,23 +131,21 @@ module ActsAsSplittable
     end
 
     def define_splittable_predicator(attribute)
-      define_method :"#{attribute}_changed?" do
+      define_splittable_method :"#{attribute}_changed?" do
         splittable_changed_attribute? attribute
       end
     end
 
     def define_splittable_setter_hook(name)
-      splittable_module.module_eval do
-        define_method("#{name}=") do |value|
-          if defined?(super)
-            super(value)
-          elsif respond_to?(:write_attribute, true)
-            write_attribute name, value
-          end
+      define_splittable_method "#{name}=" do |value|
+        if defined?(super)
+          super(value)
+        elsif respond_to?(:write_attribute, true)
+          write_attribute name, value
+        end
 
-          self.class.with_splittable_options join_on_change: false do
-            split_column_values! name
-          end
+        self.class.with_splittable_options join_on_change: false do
+          split_column_values! name
         end
       end
     end
