@@ -88,36 +88,36 @@ end
 
 shared_examples_for 'splittable with callbacks' do
 
-  describe '#*_changed?' do
+  describe '#*_unsynced?' do
     before do
       @splittable = described_class.new
     end
 
     it 'should return true when value is changed until #split_column_values! or #join_column_values! is called' do
-      @splittable.email_local_changed?.should_not  be_true
-      @splittable.email_domain_changed?.should_not be_true
+      @splittable.email_local_unsynced?.should_not  be_true
+      @splittable.email_domain_unsynced?.should_not be_true
 
       @splittable.email_local = 'splittable'
-      @splittable.email_local_changed?.should be_true
+      @splittable.email_local_unsynced?.should be_true
 
       @splittable.email_domain = 'example.com'
-      @splittable.email_domain_changed?.should be_true
+      @splittable.email_domain_unsynced?.should be_true
 
       @splittable.join_column_values!
 
-      @splittable.email_local_changed?.should_not  be_true
-      @splittable.email_domain_changed?.should_not be_true
+      @splittable.email_local_unsynced?.should_not  be_true
+      @splittable.email_domain_unsynced?.should_not be_true
 
       @splittable.email_local = nil
-      @splittable.email_local_changed?.should be_true
+      @splittable.email_local_unsynced?.should be_true
 
       @splittable.email_domain = nil
-      @splittable.email_domain_changed?.should be_true
+      @splittable.email_domain_unsynced?.should be_true
 
       @splittable.split_column_values!
 
-      @splittable.email_local_changed?.should_not  be_true
-      @splittable.email_domain_changed?.should_not be_true
+      @splittable.email_local_unsynced?.should_not  be_true
+      @splittable.email_domain_unsynced?.should_not be_true
     end
   end
 

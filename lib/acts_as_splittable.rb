@@ -90,7 +90,7 @@ module ActsAsSplittable
 
         if splitter.predicates? and not splitter.dirty?
           Utility.alias_methods_with_warning_for splittable_module do
-            alias_method :"#{attribute}_changed?", :"#{attribute}_synced?"
+            alias_method :"#{attribute}_changed?", :"#{attribute}_unsynced?"
           end
         end
       end
@@ -144,8 +144,12 @@ module ActsAsSplittable
     end
 
     def define_splittable_predicator(attribute)
-      define_splittable_method :"#{attribute}_synced?" do
+      define_splittable_method :"#{attribute}_unsynced?" do
         splittable_changed_attribute? attribute
+      end
+
+      define_splittable_method :"#{attribute}_synced?" do
+        not __send__(:"#{attribute}_unsynced?")
       end
     end
 
