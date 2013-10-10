@@ -87,6 +87,12 @@ module ActsAsSplittable
         define_splittable_setter(attribute, splitter)
         define_splittable_predicator(attribute) if splitter.predicates?
         define_splittable_dirty(attribute) if splitter.dirty?
+
+        if splitter.predicates? and not splitter.dirty?
+          Utility.alias_methods_with_warning_for splittable_module do
+            alias_method :"#{attribute}_changed?", :"#{attribute}_synced?"
+          end
+        end
       end
 
       if splittable_options[:split_on_change]
@@ -138,7 +144,7 @@ module ActsAsSplittable
     end
 
     def define_splittable_predicator(attribute)
-      define_splittable_method :"#{attribute}_changed?" do
+      define_splittable_method :"#{attribute}_synced?" do
         splittable_changed_attribute? attribute
       end
     end

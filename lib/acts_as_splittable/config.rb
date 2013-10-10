@@ -10,6 +10,14 @@ module ActsAsSplittable
       end
     end
 
+    def splitter_has_attribute(attribute)
+      attribute = attribute.to_sym
+
+      splitters.find do |splitter|
+        splitter.attributes.include?(attribute) or splitter.name == attribute
+      end
+    end
+
     def inherit!(other)
       splitters.replace (other.splitters + splitters).uniq(&:name)
     end
