@@ -1,6 +1,7 @@
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
 require 'active_record'
+require 'acts_as_splittable/utility'
 require 'acts_as_splittable/splittable'
 require 'acts_as_splittable/splitter'
 require 'acts_as_splittable/config'

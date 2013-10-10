@@ -5,8 +5,6 @@ module ActsAsSplittable
       @splittable_attributes ||= {}
     end
 
-    alias_method :splittable_partials, :splittable_attributes
-
     def split_column_values!(columns = nil)
       splittable_aggregate_columns(columns) do |column, splitter|
         value = __send__(column)
@@ -49,10 +47,6 @@ module ActsAsSplittable
       self.splittable_changed_attributes -= attributes
     end
 
-    alias_method :splittable_changed_partials, :splittable_changed_attributes
-    alias_method :splittable_changed_partial?, :splittable_changed_attribute?
-    alias_method :reset_splittable_changed_partials, :reset_splittable_changed_attributes
-
     private
     def splittable_aggregate_columns(columns = nil)
       config = self.class.splittable_config
@@ -72,5 +66,13 @@ module ActsAsSplittable
       end
     end
 
+    Utility.alias_methods_with_warning_for self do
+      alias_method :splittable_partials,               :splittable_attributes
+      alias_method :splittable_changed_partials,       :splittable_changed_attributes
+      alias_method :splittable_changed_partial?,       :splittable_changed_attribute?
+      alias_method :reset_splittable_changed_partials, :reset_splittable_changed_attributes
+
+      protected :splittable_changed_partials, :splittable_changed_partial?, :reset_splittable_changed_partials
+    end
   end
 end
