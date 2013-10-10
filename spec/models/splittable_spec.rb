@@ -391,3 +391,82 @@ describe SplittableAllowNil do
     end
   end
 end
+
+describe SplittableDirty do
+  it_behaves_like 'splittable'
+
+  let(:splittable_new)   { described_class.new }
+  let(:splittable_saved) { described_class.create!(email_local: 'splittable', email_domain: 'example.com') }
+
+  describe "*_change, *_was, *_changed?" do
+    context "new record" do
+      it "should be unchanged" do
+        splittable_new.email_local_change.should   be_nil
+        splittable_new.email_local_was.should      be_nil
+        splittable_new.email_local_changed?.should be_false
+      end
+
+      it "should be unchanged first" do
+        splittable_new.email_local = 'first value'
+        splittable_new.email_local_change.should   be_nil
+        splittable_new.email_local_was.should      == 'first value'
+        splittable_new.email_local_changed?.should be_false
+      end
+
+      it "should be changed from the second time" do
+        splittable_new.email_local  = 'first value'
+        splittable_new.email_local  = 'second value'
+
+        splittable_new.email_local_change.should   == ['first value', 'second value']
+        splittable_new.email_local_was.should      == 'first value'
+        splittable_new.email_local_changed?.should be_true
+
+        splittable_new.email_local = 'third value'
+
+        splittable_new.email_local_change.should   == ['first value', 'third value']
+        splittable_new.email_local_was.should      == 'first value'
+        splittable_new.email_local_changed?.should be_true
+      end
+
+      it "should ignore if first value is nil" do
+        splittable_new.email_local = nil
+        splittable_new.email_local = 'second value'
+        
+        splittable_new.email_local_change.should   be_nil
+        splittable_new.email_local_was.should      == 'second value'
+        splittable_new.email_local_changed?.should be_false
+      end
+    end
+
+    context "existent record" do
+      it "should be unchanged" do
+        splittable_saved.email_local.should        == 'splittable'
+        splittable_saved.email_local_change.should be_nil
+        splittable_saved.email_local_was.should      == 'splittable'
+        splittable_saved.email_local_changed?.should be_false
+      end
+
+      it "should be changed" do
+        splittable_saved.email_local = 'splittable2'
+        splittable_saved.email_local_change.should   == ['splittable', 'splittable2']
+        splittable_saved.email_local_was.should      == 'splittable'
+        splittable_saved.email_local_changed?.should be_true
+      end
+    end
+
+    it "should be reset after save" do
+      splittable_saved.email_local = 'splittable2'
+
+      splittable_saved.email_local_changed?.should be_true
+
+      splittable_saved.save!
+
+      splittable_saved.email_local_changed?.should be_false
+      splittable_saved.splittable_attributes.previous_changes.should == {'email_local' => ['splittable', 'splittable2']}
+
+      splittable_saved.save!
+
+      splittable_saved.splittable_attributes.previous_changes.should == {}
+    end
+  end
+end

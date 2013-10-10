@@ -21,6 +21,7 @@ module ActsAsSplittable
 
     def []=(key, value)
       key = key.to_sym
+      return if not key?(key) and value.nil?
       __send__ :"#{key}_will_change!" if dirty? and key?(key) and value != self[key]
       super
     end
