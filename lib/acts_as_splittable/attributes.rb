@@ -63,6 +63,7 @@ module ActsAsSplittable
       end
 
       def initialize_copy(original)
+        super
         @previously_changed = original.__send__(:instance_variable_get, :@previously_changed).dup
         @changed_attributes = original.__send__(:instance_variable_get, :@changed_attributes).dup
       end
