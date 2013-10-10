@@ -190,6 +190,26 @@ class Splittable < ActiveRecord::Base
 end
 ```
 
+### With ActiveModel::Dirty
+
+```ruby
+class Splittable < ActiveRecord::Base
+  acts_as_splittable dirty: true
+  splittable :email, delimiter: '@', attributes: [:email_local, :email_domain]
+end
+
+record = Splittable.find(id)
+record.email_local = 'nyan'
+
+p record.email_local_changed?  #=> true
+p record.email_domain_changed? #=> false
+
+record.save!
+
+p record.email_local_changed? #=> false
+p record.splittable_attributes.class.include?(ActiveModel::Dirty) #=> true
+```
+
 Options
 --------------------
 
@@ -202,6 +222,7 @@ ActsAsSplittable.default_options = {
   join_on_change:  false,
   split_on_change: false,
   allow_nil:       false,
+  dirty:           false,
 }
 ```
 
