@@ -1,8 +1,17 @@
 module ActsAsSplittable
   class Attributes < Hash
     class << self
+      def child
+        Class.new Attributes
+      end
+
       def dirty!
-        tap { include ActiveModel::Dirty unless dirty? }
+        unless dirty?
+          include ActiveModel::Dirty
+          include Dirty
+        end
+
+        self
       end
 
       def dirty?
@@ -21,8 +30,12 @@ module ActsAsSplittable
 
     def []=(key, value)
       key = key.to_sym
-      return if not key?(key) and value.nil?
-      __send__ :"#{key}_will_change!" if dirty? and key?(key) and value != self[key]
+
+      if dirty?
+        return if not key?(key) and value.nil?
+        __send__ :"#{key}_will_change!" if key?(key) and value != self[key]
+      end
+
       super
     end
 
@@ -35,23 +48,24 @@ module ActsAsSplittable
       @dirty
     end
 
-    def changed!
-      if dirty?
+    def changed!; super if defined?(super) end
+    def reset!; super if defined?(super) end
+
+    module Dirty
+      def changed!
         @previously_changed = changes
         @changed_attributes = changed_attributes.class.new
       end
-    end
 
-    def reset!
-      if dirty?
+      def reset!
         @previously_changed = changed_attributes.class.new
         @changed_attributes = changed_attributes.class.new
       end
-    end
 
-    def initialize_copy(original)
-      @previously_changed = original.__send__(:instance_variable_get, :@previously_changed).dup
-      @changed_attributes = original.__send__(:instance_variable_get, :@changed_attributes).dup
+      def initialize_copy(original)
+        @previously_changed = original.__send__(:instance_variable_get, :@previously_changed).dup
+        @changed_attributes = original.__send__(:instance_variable_get, :@changed_attributes).dup
+      end
     end
   end
 end

@@ -71,7 +71,7 @@ module ActsAsSplittable
     end
 
     def splittable_attributes_class
-      @splittable_attributes_class ||= Class.new(Attributes)
+      @splittable_attributes_class ||= Attributes.child
     end
 
     def splittable(column, options)
