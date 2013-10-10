@@ -7,15 +7,13 @@ module ActsAsSplittable
     end
 
     def deprecation_warning_of_method_name(old_name, new_name)
-       warn "DEPRECATION WARNING: '#{old_name}' is deprecated. Please use '#{new_name}' instead."
+       warn "DEPRECATION WARNING: `#{old_name}' is deprecated. Please use `#{new_name}' instead."
     end
 
     class AliasWithWarning < Struct.new(:mod)
       def alias_method(new_name, original_name)
-        prefix = mod.name
-
         mod.__send__ :define_method, new_name do |*args|
-          Utility.deprecation_warning_of_method_name "#{prefix}##{new_name}", "#{prefix}##{original_name}"
+          Utility.deprecation_warning_of_method_name new_name, original_name
           __send__ original_name, *args
         end
       end
