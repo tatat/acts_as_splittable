@@ -3,6 +3,7 @@ $LOAD_PATH.unshift File.dirname(__FILE__)
 require 'active_record'
 require 'acts_as_splittable/utility'
 require 'acts_as_splittable/splittable'
+require 'acts_as_splittable/attributes'
 require 'acts_as_splittable/splitter'
 require 'acts_as_splittable/config'
 
@@ -14,6 +15,7 @@ module ActsAsSplittable
       join_on_change:  false,
       split_on_change: false,
       allow_nil:       false,
+      dirty:           false,
     }
 
     def default_options(*args)
@@ -39,7 +41,7 @@ module ActsAsSplittable
     include Splittable
     include splittable_module
 
-    self.splittable_options = options
+    @splittable_options = options
 
     if splittable_options[:callbacks]
       after_initialize { new_record? or split_column_values! }
@@ -52,22 +54,24 @@ module ActsAsSplittable
   end
 
   module ClassMethods
-    attr_writer :splittable_options
-
     def splittable_options
       @splittable_options ||= {}
     end
 
     def with_splittable_options(other_options = {})
       old = splittable_options
-      self.splittable_options = old.merge(other_options)
+      @splittable_options = old.merge(other_options)
       Proc.new.(splittable_options)
     ensure
-      self.splittable_options = old
+      @splittable_options = old
     end
 
     def splittable_config
       @splittable_config ||= Config.new
+    end
+
+    def splittable_attributes_class
+      @splittable_attributes_class ||= Class.new(Attributes)
     end
 
     def splittable(column, options)
@@ -77,9 +81,12 @@ module ActsAsSplittable
       splittable_config.splitters << splitter
 
       splitter.attributes.each do |attribute|
+        splittable_attributes_class.define attribute
+
         define_splittable_getter(attribute)
         define_splittable_setter(attribute, splitter)
         define_splittable_predicator(attribute) if splitter.predicates?
+        define_splittable_dirty(attribute) if splitter.dirty?
       end
 
       if splittable_options[:split_on_change]
@@ -89,15 +96,14 @@ module ActsAsSplittable
 
     def inherited(child)
       super
-      child.splittable_options = splittable_options.dup
-      child.splittable_module  = splittable_module.dup
-      child.send(:include, child.splittable_module)
+      child.__send__ :instance_variable_set, :@splittable_options, splittable_options.dup
+      child.__send__ :instance_variable_set, :@splittable_module, splittable_module.dup
+      child.__send__ :instance_variable_set, :@splittable_attributes_class, splittable_attributes_class.dup
+      child.__send__ :include, child.splittable_module
       child.splittable_config.inherit! splittable_config
     end
 
     protected
-
-    attr_writer :splittable_module
 
     def splittable_module
       @splittable_module ||= Module.new
@@ -151,6 +157,14 @@ module ActsAsSplittable
       end
     end
 
+    def define_splittable_dirty(attribute)
+      splittable_attributes_class.define_dirty_attribute_method attribute
+
+      %w(change changed? was will_change!).each do |suffix|
+        name = :"#{attribute}_#{suffix}"
+        define_splittable_method(name) {|*args| splittable_attributes.__send__ name, *args }
+      end
+    end
   end
 end
 

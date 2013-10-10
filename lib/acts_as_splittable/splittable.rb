@@ -1,8 +1,7 @@
 module ActsAsSplittable
   module Splittable
-
     def splittable_attributes
-      @splittable_attributes ||= {}
+      @splittable_attributes ||= self.class.splittable_attributes_class.new
     end
 
     def split_column_values!(columns = nil)
@@ -48,6 +47,7 @@ module ActsAsSplittable
     end
 
     private
+
     def splittable_aggregate_columns(columns = nil)
       config = self.class.splittable_config
       columns = columns ? Array(columns) : config.splitters.collect(&:name)
