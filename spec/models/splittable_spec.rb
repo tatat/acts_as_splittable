@@ -428,20 +428,20 @@ describe SplittableDirty do
         splittable_new.email_local_changed?.should be_true
       end
 
-      it "should ignore if first value is nil" do
+      it "should not ignore if first value is nil" do
         splittable_new.email_local = nil
         splittable_new.email_local = 'second value'
         
-        splittable_new.email_local_change.should   be_nil
-        splittable_new.email_local_was.should      == 'second value'
-        splittable_new.email_local_changed?.should be_false
+        splittable_new.email_local_change.should   == [nil, 'second value']
+        splittable_new.email_local_was.should      be_nil
+        splittable_new.email_local_changed?.should be_true
       end
     end
 
     context "existent record" do
       it "should be unchanged" do
-        splittable_saved.email_local.should        == 'splittable'
-        splittable_saved.email_local_change.should be_nil
+        splittable_saved.email_local.should          == 'splittable'
+        splittable_saved.email_local_change.should   be_nil
         splittable_saved.email_local_was.should      == 'splittable'
         splittable_saved.email_local_changed?.should be_false
       end
@@ -451,6 +451,13 @@ describe SplittableDirty do
         splittable_saved.email_local_change.should   == ['splittable', 'splittable2']
         splittable_saved.email_local_was.should      == 'splittable'
         splittable_saved.email_local_changed?.should be_true
+      end
+
+      it "should ignore if it is not new record" do
+        record = described_class.where(email: splittable_saved.email).first
+        record.email_local_change.should   be_nil
+        record.email_local_was.should      == splittable_saved.email_local
+        record.email_local_changed?.should be_false
       end
     end
 
@@ -464,9 +471,7 @@ describe SplittableDirty do
       splittable_saved.email_local_changed?.should be_false
       splittable_saved.splittable_attributes.previous_changes.should == {'email_local' => ['splittable', 'splittable2']}
 
-      splittable_saved.save!
-
-      splittable_saved.splittable_attributes.previous_changes.should == {}
+      splittable_saved.tap(&:save!).splittable_attributes.previous_changes.should be_empty
     end
   end
 end

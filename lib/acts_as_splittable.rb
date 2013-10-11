@@ -95,7 +95,7 @@ module ActsAsSplittable
         end
       end
 
-      define_splittable_dirty_changes_applied_callback if splitter.dirty?
+      define_splittable_dirty_callbacks if splitter.dirty?
 
       if splittable_options[:split_on_change]
         define_splittable_setter_hook(splitter.name)
@@ -178,8 +178,11 @@ module ActsAsSplittable
       end
     end
 
-    def define_splittable_dirty_changes_applied_callback
-      @splittable_dirty_changes_applied_callback_defined ||= true.tap{ after_save { splittable_attributes.changed! } }
+    def define_splittable_dirty_callbacks
+      @splittable_dirty_callbacks_defined ||= true.tap{
+        after_initialize { splittable_attributes.reset! }
+        after_save { splittable_attributes.changed! }
+      }
     end
   end
 end

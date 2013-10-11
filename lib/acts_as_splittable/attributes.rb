@@ -30,13 +30,9 @@ module ActsAsSplittable
 
     def []=(key, value)
       key = key.to_sym
+      __send__ :"#{key}_will_change!" if dirty? and key?(key) and value != self[key]
 
-      if dirty?
-        return if not key?(key) and value.nil?
-        __send__ :"#{key}_will_change!" if key?(key) and value != self[key]
-      end
-
-      super
+      super key, value
     end
 
     def [](key)
@@ -53,13 +49,21 @@ module ActsAsSplittable
 
     module Dirty
       def changed!
-        @previously_changed = changes
-        @changed_attributes = changed_attributes.class.new
+        if respond_to? :changes_applied, true
+          changes_applied
+        else
+          @previously_changed = changes
+          @changed_attributes = changed_attributes.class.new
+        end
       end
 
       def reset!
-        @previously_changed = changed_attributes.class.new
-        @changed_attributes = changed_attributes.class.new
+        if respond_to? :reset_changes, true
+          reset_changes
+        else
+          @previously_changed = changed_attributes.class.new
+          @changed_attributes = changed_attributes.class.new
+        end
       end
 
       def initialize_copy(original)
