@@ -1,6 +1,8 @@
 ActsAsSplittable
 ====================
 
+[![Build Status](https://travis-ci.org/tatat/acts_as_splittable.png)](https://travis-ci.org/tatat/acts_as_splittable)
+
 Create virtual attributes.
 
 Installation
