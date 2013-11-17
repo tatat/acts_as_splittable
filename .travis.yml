@@ -4,8 +4,10 @@ rvm:
   - 1.9.3
   - 2.0.0
   - ruby-head
+bundler_args: --path vendor/bundle
 gemfile:
-  - Gemfile
+  - gemfiles/rails3.gemfile
+  - gemfiles/rails4.gemfile
 before_script:
   - cp spec/database.yml.sample spec/database.yml
 script:
