@@ -144,12 +144,12 @@ describe Splittable do
         splittable :birthday, {
           partials: [:birthday_year, :birthday_month, :birthday_day],
 
-          on_split: -> (value) {
+          on_split: ->(value) {
             year, month, day = value.chars.each_slice(2).map(&:join).map(&:to_i)
             [year + birthday_base, month, day]
           },
 
-          on_join: -> (values) {
+          on_join: ->(values) {
             year, month, day = values.map(&:to_i)
             '%02d%02d%02d' % [year - birthday_base, month, day]
           }
