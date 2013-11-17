@@ -6,7 +6,12 @@ module ActsAsSplittable
 
     def split_column_values!(columns = nil)
       splittable_aggregate_columns(columns) do |column, splitter|
-        value = __send__(column)
+        begin
+          value = __send__(column)
+        rescue ActiveModel::MissingAttributeError
+          next
+        end
+
         next if not splitter.allow_nil? and value.nil?
 
         values = splitter.split(value, self)

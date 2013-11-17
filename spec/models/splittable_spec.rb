@@ -123,9 +123,16 @@ shared_examples_for 'splittable with callbacks' do
 
 end
 
+shared_examples_for 'selectable' do
+  it "should select columns" do
+    expect { described_class.select([:id]).first }.not_to raise_error
+  end
+end
+
 describe Splittable do
    it_behaves_like 'splittable'
    it_behaves_like 'splittable with callbacks'
+   it_behaves_like 'selectable'
 
    context 'when was given a proc to callbacks' do
     it 'should call in the record' do
@@ -175,16 +182,19 @@ end
 describe SplittableInherited do
   it_behaves_like 'splittable'
   it_behaves_like 'splittable with callbacks'
+  it_behaves_like 'selectable'
 end
 
 
 describe SplittableInheritedInherited do
   it_behaves_like 'splittable'
   it_behaves_like 'splittable with callbacks'
+  it_behaves_like 'selectable'
 end
 
 
 describe SplittableSplitOrJoinOnChange do
+  it_behaves_like 'selectable'
 
   it 'should join partials when one of partials is set and all of them are not nil' do
     splittable = SplittableSplitOrJoinOnChange.new
@@ -239,6 +249,7 @@ describe SplittableSplitOrJoinOnChange do
 end
 
 describe SplittableSplitOrJoinOnChangeWithAliasAttribute do
+  it_behaves_like 'selectable'
 
   it 'should split value when value is set' do
     splittable1 = SplittableSplitOrJoinOnChangeWithAliasAttribute.new(
@@ -262,6 +273,7 @@ describe SplittableSplitOrJoinOnChangeWithAliasAttribute do
 end
 
 describe SplittableUseDelimiter do
+  it_behaves_like 'selectable'
 
   let (:splittable) do
     SplittableUseDelimiter.new(email: 'splittable@example.com')
@@ -281,6 +293,7 @@ describe SplittableUseDelimiter do
 end
 
 describe SplittableUseTypeCasting do
+  it_behaves_like 'selectable'
 
   shared_examples_for 'splittable typecasting' do
 
@@ -330,6 +343,8 @@ describe SplittableUseTypeCasting do
 end
 
 describe SplittableNotAllowNil do
+  it_behaves_like 'selectable'
+
   it "should join columns" do
     splittable = described_class.new(email_local: 'splittable', email_domain: 'example.com').join_column_values!
     splittable.email.should_not be_nil
@@ -367,6 +382,8 @@ describe SplittableNotAllowNil do
 end
 
 describe SplittableAllowNil do
+  it_behaves_like 'selectable'
+
   it "should join columns" do
     splittable = described_class.new(email_local: 'splittable', email_domain: nil).join_column_values!
     splittable.email.should == 'splittable@'
@@ -394,6 +411,7 @@ end
 
 describe SplittableDirty do
   it_behaves_like 'splittable'
+  it_behaves_like 'selectable'
 
   let(:splittable_new)   { described_class.new }
   let(:splittable_saved) { described_class.create!(email_local: 'splittable', email_domain: 'example.com') }
